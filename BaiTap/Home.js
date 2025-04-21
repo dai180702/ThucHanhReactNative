@@ -11,7 +11,7 @@ const Home = ({ navigation }) => {
       >
         <Text style={styles.text}>Bài tập buổi 1</Text>
       </TouchableOpacity>
-      {/* <TouchableOpacity
+      <TouchableOpacity
         style={styles.button}
         onPress={() => navigation.navigate("buoi2")}
       >
@@ -28,7 +28,7 @@ const Home = ({ navigation }) => {
         onPress={() => navigation.navigate("buoi4")}
       >
         <Text style={styles.text}>Bài tập buổi 4</Text>
-      </TouchableOpacity> */}
+      </TouchableOpacity>
     </View>
   );
 };
