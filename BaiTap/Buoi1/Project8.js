@@ -28,7 +28,7 @@ const PEOPLE = [
   { name: { title: "MS", first: "Malle", last: "Henry" } },
   { name: { title: "MS", first: "Mohamound", last: "Faaij" } },
   { name: { title: "MS", first: "Mohamound", last: "Da" } },
-  { name: { title: "MS", first: "Mohamound", last: "afegr" } },
+  { name: { title: "MS", first: "Mohamound", last: "Faaij" } },
   { name: { title: "MS", first: "Mohamound", last: "Faaij" } },
   { name: { title: "MS", first: "Mohamound", last: "khaca" } },
   { name: { title: "MS", first: "Mohamound", last: "Faaij" } },
@@ -43,7 +43,9 @@ export default function Project8() {
     <SafeAreaView style={{ flex: 1 }}>
       <SectionList
         sections={groupPeopleByLastName(PEOPLE)}
-        keyExtractor={(item, index) => `${item.name.first}-${item.name.last}-${index}`}
+        keyExtractor={(item, index) =>
+          `${item.name.first}-${item.name.last}-${index}`
+        }
         renderSectionHeader={({ section }) => (
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{section.title}</Text>

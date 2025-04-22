@@ -53,17 +53,23 @@ export default function ListProject({ navigation }) {
       >
         <Text style={styles.text}>Project 8</Text>
       </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.buttonCaculator}
+        onPress={() => navigation.navigate("homework")}
+      >
+        <Text style={styles.text}>Homewrork</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    justifyContent: "center",
     alignItems: "center",
     flex: 1,
     backgroundColor: "#F8F9FA",
     padding: 20,
+    paddingTop: 50,
   },
   title: {
     fontSize: 20,
@@ -86,4 +92,13 @@ const styles = StyleSheet.create({
     width: "100%",
     marginTop: 10,
   },
+  buttonCaculator: {
+    backgroundColor: "#8a2be2",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: "center",
+    width: "100%",
+    marginTop: 10,
+  }
 });

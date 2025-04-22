@@ -13,13 +13,13 @@ const Home = ({ navigation }) => {
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate("buoi2")}
+        onPress={() => navigation.navigate("auth")}
       >
         <Text style={styles.text}>Bài tập buổi 2</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate("buoi3")}
+        onPress={() => navigation.navigate("a")}
       >
         <Text style={styles.text}>Bài tập buổi 3</Text>
       </TouchableOpacity>
@@ -28,6 +28,12 @@ const Home = ({ navigation }) => {
         onPress={() => navigation.navigate("buoi4")}
       >
         <Text style={styles.text}>Bài tập buổi 4</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => navigation.navigate("buoi5")}
+      >
+        <Text style={styles.text}>Bài tập buổi 5</Text>
       </TouchableOpacity>
     </View>
   );
@@ -39,10 +45,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flex: 1,
     backgroundColor: "#F8F9FA",
-    padding: 20,
+    padding: 30,
   },
   title: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
     marginBottom: 20,
     color: "black",
@@ -50,11 +56,11 @@ const styles = StyleSheet.create({
   },
   text: {
     color: "white",
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
   },
   button: {
-    backgroundColor: "#9699FE",
+    backgroundColor: "#5f9ea0",
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
