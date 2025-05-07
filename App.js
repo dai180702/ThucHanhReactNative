@@ -14,6 +14,12 @@ import Project8 from "./BaiTap/Buoi1/Project8";
 import Caculator from "./BaiTap/Buoi1/Caculator";
 import ContactsNavigator from "./BaiTap/Buoi2/routes";
 import Options from "./BaiTap/Buoi2/Options";
+import LoginScreen from "./BaiTap/Buoi3/LoginScreen";
+import RegisterScreen from "./BaiTap/Buoi3/RegisterScreen";
+import HomeSpa from "./BaiTap/Buoi3/HomeSpa";
+import AddService from "./BaiTap/Buoi3/AddService";
+import ServiceDetail from "./BaiTap/Buoi3/ServiceDetail";
+import Profile from "./BaiTap/Buoi3/Profile";
 
 const Stack = createNativeStackNavigator();
 
@@ -28,6 +34,7 @@ export default function App() {
         />
         <Stack.Screen name="buoi1" component={Buoi1Navigation} />
         <Stack.Screen name="auth" component={Buoi2Navigation} />
+        <Stack.Screen name="buoi3" component={Buoi3Navigation} />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -102,6 +109,43 @@ const Buoi2Navigation = () => {
         name="Options"
         component={Options}
         options={{ title: "Options" }}
+      />
+    </Stack.Navigator>
+  );
+};
+
+const Buoi3Navigation = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: true }}>
+      <Stack.Screen
+        name="Buoi3"
+        component={LoginScreen}
+        options={{ headerShown: false, title: "Bài tập buổi 3" }}
+      />
+      <Stack.Screen
+        name="Register"
+        component={RegisterScreen}
+        options={{ title: "Register" }}
+      />
+      <Stack.Screen
+        name="home"
+        component={HomeSpa}
+        options={{ headerShown: false, title: "Home" }}
+      />
+      <Stack.Screen
+        name="add"
+        component={AddService}
+        options={{ headerShown: false, title: "Add" }}
+      />
+      <Stack.Screen
+        name="ServiceDetail"
+        component={ServiceDetail}
+        options={{ title: "Chi tiết dịch vụ", headerShown: false }}
+      />
+      <Stack.Screen
+        name="Profile"
+        component={Profile}
+        options={{ title: "Profile", headerShown: false }}
       />
     </Stack.Navigator>
   );

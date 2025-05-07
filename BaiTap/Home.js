@@ -19,7 +19,7 @@ const Home = ({ navigation }) => {
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate("a")}
+        onPress={() => navigation.navigate("buoi3")}
       >
         <Text style={styles.text}>Bài tập buổi 3</Text>
       </TouchableOpacity>
