@@ -6,15 +6,23 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  Image,
 } from "react-native";
 import { ref, push } from "firebase/database";
 import { useNavigation } from "@react-navigation/native";
 import { db } from "../../firebaseConfig";
+import * as ImagePicker from "expo-image-picker";
+import {
+  CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_UPLOAD_PRESET,
+} from "../../Config/cloudinaryCongfig";
 
 const AddService = () => {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [formattedPrice, setFormattedPrice] = useState("");
+  const [image, setImage] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const navigation = useNavigation();
 
   // Hàm định dạng giá tiền với dấu chấm ngăn cách hàng nghìn
@@ -36,27 +44,86 @@ const AddService = () => {
     setFormattedPrice(formatCurrency(numericValue));
   };
 
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== "granted") {
+      Alert.alert(
+        "Cần quyền truy cập",
+        "Vui lòng cho phép truy cập thư viện ảnh"
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const uploadImage = async (uri) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", {
+        uri: uri,
+        type: "image/jpeg",
+        name: "upload.jpg",
+      });
+      formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        {
+          method: "POST",
+          body: formData,
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      const data = await response.json();
+      return data.secure_url;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      throw error;
+    }
+  };
+
   const handleAddService = async () => {
     console.log("Bắt đầu thêm dịch vụ");
 
-    // Kiểm tra xem các trường nhập liệu có hợp lệ không
     if (!name || !price) {
       Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin");
       return;
     }
 
-    // Tạo tham chiếu đến vị trí trong Firebase Realtime Database
-    const servicesRef = ref(db, "services");
+    if (!image) {
+      Alert.alert("Lỗi", "Vui lòng chọn hình ảnh cho dịch vụ");
+      return;
+    }
 
-    // Lấy thời gian hiện tại
+    setUploading(true);
+    const servicesRef = ref(db, "services");
     const currentDate = new Date().toLocaleString();
 
     try {
+      // Upload image to Cloudinary
+      const imageUrl = await uploadImage(image);
+
       // In ra dữ liệu trước khi gửi lên Firebase
       console.log("Dữ liệu sẽ gửi lên Firebase:", {
         name: name.trim(),
         price: parseInt(price),
         formattedPrice: formattedPrice,
+        imageUrl: imageUrl,
         createdAt: currentDate,
         updatedAt: currentDate,
       });
@@ -66,22 +133,32 @@ const AddService = () => {
         name: name.trim(),
         price: parseInt(price),
         formattedPrice: formattedPrice,
+        imageUrl: imageUrl,
         createdAt: currentDate,
         updatedAt: currentDate,
       });
-      
-      // Xử lý thông báo khi thành công
+
       Alert.alert("Thành công", "Dịch vụ đã được thêm!");
       navigation.goBack();
     } catch (error) {
       console.error("Lỗi khi thêm dịch vụ:", error);
       Alert.alert("Lỗi", "Không thể thêm dịch vụ. Vui lòng thử lại.");
+    } finally {
+      setUploading(false);
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Thêm Dịch Vụ Mới</Text>
+
+      <TouchableOpacity style={styles.imageContainer} onPress={pickImage}>
+        {image ? (
+          <Image source={{ uri: image }} style={styles.image} />
+        ) : (
+          <Text style={styles.imagePlaceholder}>Chọn hình ảnh</Text>
+        )}
+      </TouchableOpacity>
 
       <Text style={styles.label}>Tên dịch vụ</Text>
       <TextInput
@@ -100,8 +177,14 @@ const AddService = () => {
         keyboardType="numeric"
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleAddService}>
-        <Text style={styles.buttonText}>Thêm Dịch Vụ</Text>
+      <TouchableOpacity
+        style={[styles.button, uploading && styles.buttonDisabled]}
+        onPress={handleAddService}
+        disabled={uploading}
+      >
+        <Text style={styles.buttonText}>
+          {uploading ? "Đang thêm..." : "Thêm Dịch Vụ"}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -146,6 +229,29 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  imageContainer: {
+    width: "100%",
+    height: 200,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    marginBottom: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 8,
+  },
+  imagePlaceholder: {
+    color: "#666",
+    fontSize: 16,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
 });
 

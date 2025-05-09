@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -8,11 +7,17 @@ import {
   TouchableOpacity,
   Alert,
   Modal,
+  Image,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { ref, update, remove, get } from "firebase/database";
 import { db } from "../../firebaseConfig";
+import * as ImagePicker from "expo-image-picker";
+import {
+  CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_UPLOAD_PRESET,
+} from "../../Config/cloudinaryCongfig";
 
 const ServiceDetail = () => {
   const navigation = useNavigation();
@@ -24,11 +29,13 @@ const ServiceDetail = () => {
 
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [isEditing, setIsEditing] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [creatorInfo, setCreatorInfo] = useState({});
   const [creationTime, setCreationTime] = useState("");
   const [updateTime, setUpdateTime] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   // Debug state changes
   useEffect(() => {
@@ -45,6 +52,7 @@ const ServiceDetail = () => {
           const serviceData = snapshot.val();
           setName(serviceData.name || "");
           setPrice(serviceData.price ? serviceData.price.toString() : "0");
+          setImageUrl(serviceData.imageUrl || "");
           setCreationTime(serviceData.createdAt || "");
           setUpdateTime(serviceData.updatedAt || "");
         } else {
@@ -59,6 +67,78 @@ const ServiceDetail = () => {
 
     fetchServiceDetails();
   }, [serviceId]);
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== "granted") {
+      Alert.alert(
+        "Cần quyền truy cập",
+        "Vui lòng cho phép truy cập thư viện ảnh"
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      await uploadImage(result.assets[0].uri);
+    }
+  };
+
+  const uploadImage = async (uri) => {
+    try {
+      setUploading(true);
+      const formData = new FormData();
+      formData.append("file", {
+        uri: uri,
+        type: "image/jpeg",
+        name: "upload.jpg",
+      });
+      formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        {
+          method: "POST",
+          body: formData,
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      const data = await response.json();
+      setImageUrl(data.secure_url);
+      return data.secure_url;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      Alert.alert("Lỗi", "Không thể tải lên hình ảnh. Vui lòng thử lại.");
+      throw error;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const formatPrice = (value) => {
+    const numericValue = value.replace(/[^0-9]/g, "");
+    if (numericValue) {
+      return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "đ";
+    }
+    return "";
+  };
+
+  const handlePriceChange = (text) => {
+    // Loại bỏ định dạng để lưu giá trị gốc
+    const numericValue = text.replace(/[^0-9]/g, "");
+    setPrice(numericValue);
+  };
 
   const handleUpdateService = async () => {
     if (!name || !price) {
@@ -79,10 +159,11 @@ const ServiceDetail = () => {
       await update(serviceRef, {
         name: name.trim(),
         price: priceValue,
+        imageUrl: imageUrl,
         updatedAt: currentDate,
       });
 
-      Alert.alert("Cập nhật thành ", "Dịch vụ đã được cập nhật!");
+      Alert.alert("Cập nhật thành công", "Dịch vụ đã được cập nhật!");
       setIsEditing(false);
       setUpdateTime(currentDate);
     } catch (error) {
@@ -162,6 +243,32 @@ const ServiceDetail = () => {
       </View>
 
       <View style={styles.content}>
+        <TouchableOpacity
+          style={styles.imageContainer}
+          onPress={isEditing ? pickImage : null}
+          disabled={!isEditing}
+        >
+          {imageUrl ? (
+            <Image
+              source={{ uri: imageUrl }}
+              style={styles.serviceImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.placeholderContainer}>
+              <Icon name="add-a-photo" size={40} color="#ccc" />
+              <Text style={styles.placeholderText}>
+                {isEditing ? "Chọn hình ảnh" : "Không có hình ảnh"}
+              </Text>
+            </View>
+          )}
+          {isEditing && (
+            <View style={styles.editOverlay}>
+              <Icon name="edit" size={24} color="#fff" />
+            </View>
+          )}
+        </TouchableOpacity>
+
         <View style={styles.formGroup}>
           <Text style={styles.label}>Service name *</Text>
           <TextInput
@@ -169,6 +276,7 @@ const ServiceDetail = () => {
             value={name}
             onChangeText={setName}
             placeholder="Service name"
+            editable={isEditing}
           />
         </View>
 
@@ -176,10 +284,11 @@ const ServiceDetail = () => {
           <Text style={styles.label}>Price *</Text>
           <TextInput
             style={styles.input}
-            value={price}
-            onChangeText={setPrice}
+            value={formatPrice(price)}
+            onChangeText={handlePriceChange}
             placeholder="Price"
             keyboardType="numeric"
+            editable={isEditing}
           />
         </View>
 
@@ -193,12 +302,17 @@ const ServiceDetail = () => {
           <Text style={styles.detailText}>{formatDateTime(updateTime)}</Text>
         </View>
 
-        <TouchableOpacity
-          style={styles.updateButton}
-          onPress={handleUpdateService}
-        >
-          <Text style={styles.buttonText}>Update</Text>
-        </TouchableOpacity>
+        {isEditing && (
+          <TouchableOpacity
+            style={[styles.updateButton, uploading && styles.buttonDisabled]}
+            onPress={handleUpdateService}
+            disabled={uploading}
+          >
+            <Text style={styles.buttonText}>
+              {uploading ? "Đang cập nhật..." : "Update"}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {renderDeleteConfirmation()}
@@ -320,6 +434,39 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     color: "#4CAF50",
     fontWeight: "bold",
+  },
+  imageContainer: {
+    width: "100%",
+    height: 200,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 8,
+    marginBottom: 16,
+    overflow: "hidden",
+    position: "relative",
+  },
+  serviceImage: {
+    width: "100%",
+    height: "100%",
+  },
+  placeholderContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  placeholderText: {
+    color: "#666",
+    marginTop: 8,
+  },
+  editOverlay: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    padding: 8,
+    borderTopLeftRadius: 8,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
 });
 

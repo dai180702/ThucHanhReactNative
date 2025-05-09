@@ -1,0 +1,4 @@
+export const CLOUDINARY_CLOUD_NAME = "dhqghqdv3";
+export const CLOUDINARY_UPLOAD_PRESET = "SpaService";
+export const CLOUDINARY_API_KEY = 227726474752446;
+export const CLOUDINARY_API_SECRET = "VRNXRUQbY00vcHT8GJp8eIgi7p4";

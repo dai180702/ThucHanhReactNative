@@ -10,15 +10,39 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
 import { getDatabase, ref, onValue } from "firebase/database";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
-const HomeSpa = () => {
+const UserHome = () => {
   const navigation = useNavigation();
   const [services, setServices] = useState([]);
+  const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
+    const auth = getAuth();
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUserEmail(user.email);
+        // Kiểm tra nếu là admin thì chuyển về trang admin
+        if (user.email === "abc@gmail.com") {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "HomeSpa" }],
+          });
+        }
+      } else {
+        setUserEmail("");
+        // Nếu chưa đăng nhập thì chuyển về trang login
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Login" }],
+        });
+      }
+    });
+
+    // Lấy danh sách dịch vụ
     const db = getDatabase();
     const servicesRef = ref(db, "services");
-    const unsubscribe = onValue(servicesRef, (snapshot) => {
+    const unsubscribeServices = onValue(servicesRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
         const list = Object.keys(data).map((key) => ({
@@ -30,7 +54,11 @@ const HomeSpa = () => {
         setServices([]);
       }
     });
-    return () => unsubscribe();
+
+    return () => {
+      unsubscribeAuth();
+      unsubscribeServices();
+    };
   }, []);
 
   const formatPrice = (price) => {
@@ -39,12 +67,7 @@ const HomeSpa = () => {
   };
 
   const renderService = ({ item }) => (
-    <TouchableOpacity
-      style={styles.serviceItem}
-      onPress={() =>
-        navigation.navigate("ServiceDetail", { serviceId: item.id })
-      }
-    >
+    <View style={styles.serviceItem}>
       <Image
         source={
           item.imageUrl
@@ -60,7 +83,7 @@ const HomeSpa = () => {
         </Text>
         <Text style={styles.servicePrice}>{formatPrice(item.price)}</Text>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 
   return (
@@ -72,6 +95,7 @@ const HomeSpa = () => {
           <Icon name="account-circle" size={32} color="#fff" />
         </TouchableOpacity>
       </View>
+
       {/* Logo */}
       <View style={styles.logoContainer}>
         <Image
@@ -79,43 +103,37 @@ const HomeSpa = () => {
           style={styles.logo}
           resizeMode="contain"
         />
-        {/* <Text style={styles.logoText}>KAMI SPA</Text> */}
       </View>
+
       {/* Danh sách dịch vụ */}
       <View style={styles.listHeader}>
         <Text style={styles.listTitle}>Danh sách dịch vụ</Text>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => navigation.navigate("add")}
-        >
-          <Icon name="add-circle" size={32} color="#e57373" />
-        </TouchableOpacity>
       </View>
+
       <FlatList
         data={services}
         keyExtractor={(item) => item.id}
         renderItem={renderService}
         contentContainerStyle={{ paddingBottom: 80 }}
       />
+
       {/* Bottom Tab */}
       <View style={styles.tabBar}>
         <TouchableOpacity style={styles.tabItem}>
           <Icon name="home" size={28} color="#e57373" />
           <Text style={styles.tabLabelActive}>Home</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.tabItem}
-          onPress={() => navigation.navigate("add")}
-        >
-          <Icon name="add-circle" size={28} color="#888" />
-          <Text style={styles.tabLabel}>Add</Text>
+        <TouchableOpacity style={styles.tabItem}>
+          <Icon name="attach-money" size={28} color="#888" />
+          <Text style={styles.tabLabel}>Transaction</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.tabItem}
-          onPress={() => navigation.navigate("Profile")}
-        >
-          <Icon name="person" size={28} color="#888" />
-          <Text style={styles.tabLabel}>Profile</Text>
+        <TouchableOpacity style={styles.tabItem}>
+          <Icon name="people" size={28} color="#888" />
+          <Text style={styles.tabLabel}>Customer</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.tabItem}>
+          <Icon name="settings" size={28} color="#888" />
+          <Text style={styles.tabLabel}>Setting</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -152,12 +170,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: -10,
   },
-  logoText: {
-    fontSize: 22,
-    color: "#e57373",
-    fontWeight: "bold",
-    marginTop: -10,
-  },
   listHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -170,9 +182,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#222",
-  },
-  addButton: {
-    marginLeft: 8,
   },
   serviceItem: {
     backgroundColor: "#fafafa",
@@ -235,4 +244,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeSpa;
+export default UserHome;

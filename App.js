@@ -20,6 +20,7 @@ import HomeSpa from "./BaiTap/Buoi3/HomeSpa";
 import AddService from "./BaiTap/Buoi3/AddService";
 import ServiceDetail from "./BaiTap/Buoi3/ServiceDetail";
 import Profile from "./BaiTap/Buoi3/Profile";
+import UserHome from "./BaiTap/Buoi3/UserHome";
 
 const Stack = createNativeStackNavigator();
 
@@ -117,6 +118,7 @@ const Buoi2Navigation = () => {
 const Buoi3Navigation = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: true }}>
+     
       <Stack.Screen
         name="Buoi3"
         component={LoginScreen}
@@ -127,11 +129,12 @@ const Buoi3Navigation = () => {
         component={RegisterScreen}
         options={{ title: "Register" }}
       />
-      <Stack.Screen
+       <Stack.Screen
         name="home"
         component={HomeSpa}
         options={{ headerShown: false, title: "Home" }}
       />
+
       <Stack.Screen
         name="add"
         component={AddService}
@@ -146,6 +149,11 @@ const Buoi3Navigation = () => {
         name="Profile"
         component={Profile}
         options={{ title: "Profile", headerShown: false }}
+      />
+      <Stack.Screen
+        name="UserHome"
+        component={UserHome}
+        options={{ headerShown: false, title: "UserHome" }}
       />
     </Stack.Navigator>
   );
