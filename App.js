@@ -21,6 +21,11 @@ import AddService from "./BaiTap/Buoi3/AddService";
 import ServiceDetail from "./BaiTap/Buoi3/ServiceDetail";
 import Profile from "./BaiTap/Buoi3/Profile";
 import UserHome from "./BaiTap/Buoi3/UserHome";
+import AdminProfile from "./BaiTap/Buoi3/AdminProfile";
+import ForgotPasswordScreen from "./BaiTap/Buoi3/ForgotPasswordScreen";
+import ServiceDetailUser from "./BaiTap/Buoi3/ServiceDetailUser";
+import BookingManagement from "./BaiTap/Buoi3/BookingManagement";
+import UserBookings from "./BaiTap/Buoi3/UserBookings";
 
 const Stack = createNativeStackNavigator();
 
@@ -118,7 +123,6 @@ const Buoi2Navigation = () => {
 const Buoi3Navigation = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: true }}>
-     
       <Stack.Screen
         name="Buoi3"
         component={LoginScreen}
@@ -129,7 +133,7 @@ const Buoi3Navigation = () => {
         component={RegisterScreen}
         options={{ title: "Register" }}
       />
-       <Stack.Screen
+      <Stack.Screen
         name="home"
         component={HomeSpa}
         options={{ headerShown: false, title: "Home" }}
@@ -154,6 +158,36 @@ const Buoi3Navigation = () => {
         name="UserHome"
         component={UserHome}
         options={{ headerShown: false, title: "UserHome" }}
+      />
+      <Stack.Screen
+        name="AdminProfile"
+        component={AdminProfile}
+        options={{ title: "Admin Profile", headerShown: false }}
+      />
+      <Stack.Screen
+        name="ForgotPassword"
+        component={ForgotPasswordScreen}
+        options={{ title: "Forgot Password", headerShown: false }}
+      />
+      {/* <Stack.Screen
+        name="ServiceDetailUser"
+        component={ServiceDetailScreen}
+        options={{ title: "Chi tiết dịch vụ", headerShown: false }}
+      /> */}
+      <Stack.Screen
+        name="ServiceDetailUser"
+        component={ServiceDetailUser}
+        options={{ title: "Chi tiết dịch vụ", headerShown: false }}
+      />
+      <Stack.Screen
+        name="BookingManagement"
+        component={BookingManagement}
+        options={{ title: "Quản lý đặt lịch", headerShown: false }}
+      />
+      <Stack.Screen
+        name="UserBookings"
+        component={UserBookings}
+        options={{ title: "Quản lý đặt lịch", headerShown: false }}
       />
     </Stack.Navigator>
   );

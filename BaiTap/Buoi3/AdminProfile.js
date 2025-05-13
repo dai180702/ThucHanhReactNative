@@ -25,19 +25,20 @@ import {
   CLOUDINARY_UPLOAD_PRESET,
 } from "../../Config/cloudinaryCongfig";
 
-const Profile = () => {
+const AdminProfile = () => {
   const navigation = useNavigation();
   const [isEditing, setIsEditing] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [userInfo, setUserInfo] = useState({
-    name: "",
+  const [adminInfo, setAdminInfo] = useState({
+    name: "Admin",
     email: "",
     phone: "",
     address: "",
     avatar: null,
+    role: "admin",
   });
   const [uploading, setUploading] = useState(false);
 
@@ -45,31 +46,32 @@ const Profile = () => {
     const user = auth.currentUser;
     if (
       user &&
-      (user.email === "abc@gmail.com" || user.email === "admin@gmail.com")
+      user.email !== "abc@gmail.com" &&
+      user.email !== "admin@gmail.com"
     ) {
       navigation.reset({
         index: 0,
-        routes: [{ name: "AdminProfile" }],
+        routes: [{ name: "Profile" }],
       });
     } else {
-      fetchUserInfo();
+      fetchAdminInfo();
     }
   }, []);
 
-  const fetchUserInfo = async () => {
+  const fetchAdminInfo = async () => {
     const user = auth.currentUser;
     if (user) {
-      const userRef = ref(db, `users/${user.uid}`);
+      const adminRef = ref(db, `admins/${user.uid}`);
       try {
-        const snapshot = await get(userRef);
+        const snapshot = await get(adminRef);
         if (snapshot.exists()) {
-          setUserInfo((prev) => ({
+          setAdminInfo((prev) => ({
             ...prev,
             ...snapshot.val(),
           }));
         }
       } catch (error) {
-        console.error("Error fetching user info:", error);
+        console.error("Error fetching admin info:", error);
       }
     }
   };
@@ -120,7 +122,7 @@ const Profile = () => {
       );
 
       const data = await response.json();
-      setUserInfo((prev) => ({
+      setAdminInfo((prev) => ({
         ...prev,
         avatar: data.secure_url,
       }));
@@ -138,12 +140,12 @@ const Profile = () => {
 
     try {
       setUploading(true);
-      const userRef = ref(db, `users/${user.uid}`);
-      await update(userRef, {
-        name: userInfo.name,
-        phone: userInfo.phone,
-        address: userInfo.address,
-        avatar: userInfo.avatar,
+      const adminRef = ref(db, `admins/${user.uid}`);
+      await update(adminRef, {
+        name: adminInfo.name,
+        phone: adminInfo.phone,
+        address: adminInfo.address,
+        avatar: adminInfo.avatar,
         updatedAt: new Date().toLocaleString(),
       });
 
@@ -154,7 +156,7 @@ const Profile = () => {
             setIsEditing(false);
             navigation.reset({
               index: 0,
-              routes: [{ name: "Profile" }],
+              routes: [{ name: "AdminProfile" }],
             });
           },
         },
@@ -209,10 +211,7 @@ const Profile = () => {
         currentPassword
       );
 
-      // Re-authenticate user
       await reauthenticateWithCredential(user, credential);
-
-      // Update password
       await updatePassword(user, newPassword);
 
       Alert.alert("Thành công", "Mật khẩu đã được thay đổi!", [
@@ -324,11 +323,11 @@ const Profile = () => {
       <View style={[styles.header, isEditing && styles.headerEditing]}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.navigate("home")}
         >
           <Icon name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profile</Text>
+        <Text style={styles.headerTitle}>Admin Profile</Text>
         <TouchableOpacity
           style={[styles.editButton, isEditing && styles.editButtonActive]}
           onPress={() => setIsEditing(!isEditing)}
@@ -349,8 +348,8 @@ const Profile = () => {
           >
             <Image
               source={
-                userInfo.avatar
-                  ? { uri: userInfo.avatar }
+                adminInfo.avatar
+                  ? { uri: adminInfo.avatar }
                   : require("../../img/logolab3.png")
               }
               style={styles.profileImage}
@@ -361,9 +360,9 @@ const Profile = () => {
               </View>
             )}
           </TouchableOpacity>
-          <Text style={styles.userName}>{userInfo.name}</Text>
-          <Text style={styles.userEmail}>{userInfo.email}</Text>
-          <Text style={styles.userRole}>User</Text>
+          <Text style={styles.userName}>{adminInfo.name}</Text>
+          <Text style={styles.userEmail}>{adminInfo.email}</Text>
+          <Text style={styles.userRole}>Administrator</Text>
         </View>
 
         <View style={styles.infoContainer}>
@@ -372,16 +371,16 @@ const Profile = () => {
             {isEditing ? (
               <TextInput
                 style={[styles.input, styles.inputEditing]}
-                value={userInfo.name}
+                value={adminInfo.name}
                 onChangeText={(text) =>
-                  setUserInfo((prev) => ({ ...prev, name: text }))
+                  setAdminInfo((prev) => ({ ...prev, name: text }))
                 }
                 placeholder="Nhập tên của bạn"
                 placeholderTextColor="#999"
               />
             ) : (
               <Text style={styles.infoText}>
-                {userInfo.name || "Tên của bạn"}
+                {adminInfo.name || "Tên của bạn"}
               </Text>
             )}
           </View>
@@ -391,9 +390,9 @@ const Profile = () => {
             {isEditing ? (
               <TextInput
                 style={[styles.input, styles.inputEditing]}
-                value={userInfo.phone}
+                value={adminInfo.phone}
                 onChangeText={(text) =>
-                  setUserInfo((prev) => ({ ...prev, phone: text }))
+                  setAdminInfo((prev) => ({ ...prev, phone: text }))
                 }
                 placeholder="Nhập số điện thoại"
                 placeholderTextColor="#999"
@@ -401,7 +400,7 @@ const Profile = () => {
               />
             ) : (
               <Text style={styles.infoText}>
-                {userInfo.phone || "Số điện thoại"}
+                {adminInfo.phone || "Số điện thoại"}
               </Text>
             )}
           </View>
@@ -411,9 +410,9 @@ const Profile = () => {
             {isEditing ? (
               <TextInput
                 style={[styles.input, styles.inputEditing]}
-                value={userInfo.address}
+                value={adminInfo.address}
                 onChangeText={(text) =>
-                  setUserInfo((prev) => ({ ...prev, address: text }))
+                  setAdminInfo((prev) => ({ ...prev, address: text }))
                 }
                 placeholder="Nhập địa chỉ"
                 placeholderTextColor="#999"
@@ -421,7 +420,7 @@ const Profile = () => {
               />
             ) : (
               <Text style={styles.infoText}>
-                {userInfo.address || "Địa chỉ"}
+                {adminInfo.address || "Địa chỉ"}
               </Text>
             )}
           </View>
@@ -462,7 +461,7 @@ const Profile = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#fff",
   },
   header: {
     backgroundColor: "#e57373",
@@ -505,11 +504,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
   },
   imageContainer: {
     position: "relative",
@@ -524,7 +518,6 @@ const styles = StyleSheet.create({
   imageContainerEditing: {
     borderWidth: 3,
     borderColor: "#e57373",
-    transform: [{ scale: 1.05 }],
   },
   profileImage: {
     width: 120,
@@ -552,9 +545,9 @@ const styles = StyleSheet.create({
   },
   userRole: {
     fontSize: 14,
-    color: "#4caf50",
+    color: "#e57373",
     fontWeight: "bold",
-    backgroundColor: "#e8f5e9",
+    backgroundColor: "#ffebee",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
@@ -562,14 +555,6 @@ const styles = StyleSheet.create({
   infoContainer: {
     padding: 16,
     backgroundColor: "#fff",
-    marginTop: 8,
-    borderRadius: 8,
-    marginHorizontal: 8,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
   },
   infoItem: {
     flexDirection: "row",
@@ -589,8 +574,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1.41,
-    borderWidth: 1,
-    borderColor: "#e57373",
   },
   infoText: {
     flex: 1,
@@ -603,9 +586,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#222",
     marginLeft: 16,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e57373",
+    paddingVertical: 4,
   },
   inputEditing: {
     borderBottomWidth: 1,
@@ -657,11 +638,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
   },
   modalContainer: {
     width: "90%",
@@ -673,7 +649,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    maxHeight: "80%",
   },
   modalHeader: {
     flexDirection: "row",
@@ -696,7 +671,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
     marginBottom: 4,
-    marginTop: 12,
   },
   backButton: {
     position: "absolute",
@@ -707,4 +681,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Profile;
+export default AdminProfile;

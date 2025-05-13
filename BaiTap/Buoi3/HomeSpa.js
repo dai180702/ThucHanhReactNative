@@ -6,6 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
+  TextInput,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
@@ -14,6 +15,8 @@ import { getDatabase, ref, onValue } from "firebase/database";
 const HomeSpa = () => {
   const navigation = useNavigation();
   const [services, setServices] = useState([]);
+  const [filteredServices, setFilteredServices] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const db = getDatabase();
@@ -26,12 +29,25 @@ const HomeSpa = () => {
           ...data[key],
         }));
         setServices(list);
+        setFilteredServices(list);
       } else {
         setServices([]);
+        setFilteredServices([]);
       }
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setFilteredServices(services);
+    } else {
+      const filtered = services.filter((service) =>
+        service.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredServices(filtered);
+    }
+  }, [searchQuery, services]);
 
   const formatPrice = (price) => {
     if (!price) return "0đ";
@@ -81,6 +97,25 @@ const HomeSpa = () => {
         />
         {/* <Text style={styles.logoText}>KAMI SPA</Text> */}
       </View>
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <Icon name="search" size={24} color="#666" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Tìm kiếm dịch vụ..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholderTextColor="#999"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity
+            onPress={() => setSearchQuery("")}
+            style={styles.clearButton}
+          >
+            <Icon name="close" size={20} color="#666" />
+          </TouchableOpacity>
+        )}
+      </View>
       {/* Danh sách dịch vụ */}
       <View style={styles.listHeader}>
         <Text style={styles.listTitle}>Danh sách dịch vụ</Text>
@@ -92,7 +127,7 @@ const HomeSpa = () => {
         </TouchableOpacity>
       </View>
       <FlatList
-        data={services}
+        data={filteredServices}
         keyExtractor={(item) => item.id}
         renderItem={renderService}
         contentContainerStyle={{ paddingBottom: 80 }}
@@ -102,6 +137,13 @@ const HomeSpa = () => {
         <TouchableOpacity style={styles.tabItem}>
           <Icon name="home" size={28} color="#e57373" />
           <Text style={styles.tabLabelActive}>Home</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.tabItem}
+          onPress={() => navigation.navigate("BookingManagement")}
+        >
+          <Icon name="receipt" size={28} color="#888" />
+          <Text style={styles.tabLabel}>Đơn hàng</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.tabItem}
@@ -232,6 +274,29 @@ const styles = StyleSheet.create({
     color: "#e57373",
     marginTop: 2,
     fontWeight: "bold",
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    marginHorizontal: 16,
+    marginVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#eee",
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    height: 40,
+    fontSize: 16,
+    color: "#333",
+  },
+  clearButton: {
+    padding: 4,
   },
 });
 

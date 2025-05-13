@@ -6,6 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
+  TextInput,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
@@ -15,6 +16,8 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 const UserHome = () => {
   const navigation = useNavigation();
   const [services, setServices] = useState([]);
+  const [filteredServices, setFilteredServices] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
@@ -23,7 +26,10 @@ const UserHome = () => {
       if (user) {
         setUserEmail(user.email);
         // Kiểm tra nếu là admin thì chuyển về trang admin
-        if (user.email === "abc@gmail.com") {
+        if (
+          user.email === "abc@gmail.com" ||
+          user.email === "admin@gmail.com"
+        ) {
           navigation.reset({
             index: 0,
             routes: [{ name: "HomeSpa" }],
@@ -50,8 +56,10 @@ const UserHome = () => {
           ...data[key],
         }));
         setServices(list);
+        setFilteredServices(list);
       } else {
         setServices([]);
+        setFilteredServices([]);
       }
     });
 
@@ -61,13 +69,29 @@ const UserHome = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setFilteredServices(services);
+    } else {
+      const filtered = services.filter((service) =>
+        service.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredServices(filtered);
+    }
+  }, [searchQuery, services]);
+
   const formatPrice = (price) => {
     if (!price) return "0đ";
     return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "đ";
   };
 
   const renderService = ({ item }) => (
-    <View style={styles.serviceItem}>
+    <TouchableOpacity
+      style={styles.serviceItem}
+      onPress={() =>
+        navigation.navigate("ServiceDetailUser", { service: item })
+      }
+    >
       <Image
         source={
           item.imageUrl
@@ -83,7 +107,7 @@ const UserHome = () => {
         </Text>
         <Text style={styles.servicePrice}>{formatPrice(item.price)}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -105,13 +129,33 @@ const UserHome = () => {
         />
       </View>
 
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <Icon name="search" size={24} color="#666" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Tìm kiếm dịch vụ..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholderTextColor="#999"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity
+            onPress={() => setSearchQuery("")}
+            style={styles.clearButton}
+          >
+            <Icon name="close" size={20} color="#666" />
+          </TouchableOpacity>
+        )}
+      </View>
+
       {/* Danh sách dịch vụ */}
       <View style={styles.listHeader}>
         <Text style={styles.listTitle}>Danh sách dịch vụ</Text>
       </View>
 
       <FlatList
-        data={services}
+        data={filteredServices}
         keyExtractor={(item) => item.id}
         renderItem={renderService}
         contentContainerStyle={{ paddingBottom: 80 }}
@@ -123,9 +167,12 @@ const UserHome = () => {
           <Icon name="home" size={28} color="#e57373" />
           <Text style={styles.tabLabelActive}>Home</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.tabItem}>
-          <Icon name="attach-money" size={28} color="#888" />
-          <Text style={styles.tabLabel}>Transaction</Text>
+        <TouchableOpacity
+          style={styles.tabItem}
+          onPress={() => navigation.navigate("UserBookings")}
+        >
+          <Icon name="receipt" size={28} color="#888" />
+          <Text style={styles.tabLabel}>Đơn hàng</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.tabItem}>
           <Icon name="people" size={28} color="#888" />
@@ -241,6 +288,29 @@ const styles = StyleSheet.create({
     color: "#e57373",
     marginTop: 2,
     fontWeight: "bold",
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    marginHorizontal: 16,
+    marginVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#eee",
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    height: 40,
+    fontSize: 16,
+    color: "#333",
+  },
+  clearButton: {
+    padding: 4,
   },
 });
 

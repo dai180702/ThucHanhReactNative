@@ -95,6 +95,12 @@ const LoginScreen = ({ navigation }) => {
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => navigation.navigate("ForgotPassword")}
+        style={styles.forgotPasswordLink}
+      >
+        <Text style={styles.linkText}>Quên mật khẩu?</Text>
+      </TouchableOpacity>
       <Text
         onPress={() => navigation.navigate("Register")}
         style={styles.linkText}
@@ -155,6 +161,9 @@ const styles = StyleSheet.create({
   linkText: {
     textAlign: "center",
     color: "blue",
+  },
+  forgotPasswordLink: {
+    marginBottom: 10,
   },
 });
 
